@@ -1,6 +1,7 @@
+import { GameStatus } from './constants';
 import { Game } from './game'
 
-test('Game init', () => {
+test('Check game initialization', () => {
     const game = new Game();
     game.settings = {
         gridSize: {
@@ -12,5 +13,15 @@ test('Game init', () => {
 
     expect(gridSize.rows).toBe(2);
     expect(gridSize.columns).toBe(2);
+})
+
+test('Check start game', () => {
+    const game = new Game();
+
+    expect(game.status).toBe(GameStatus.pending);
+
+    game.startGame()
+
+    expect(game.status).toBe(GameStatus.inProgress);
 })
 
