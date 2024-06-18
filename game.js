@@ -4,9 +4,10 @@ export class Game {
     #settings = {
         gridSize: {
             rows: 2,
-            columns: 2
+            columns: 2,
         },
         jumpGoogleInterval: 100,
+        maxPointsToWin: 10
     };
 
     #status = GameStatus.pending;
@@ -22,7 +23,7 @@ export class Game {
     #score = {
         1: { points: 0 },
         2: { points: 0 },
-    }
+    };
 
     get settings() {
         return this.#settings;
@@ -44,9 +45,11 @@ export class Game {
         return this.#google;
     }
 
+    get score() {
+        return this.#score;
+    }
 
     constructor() {
-
     }
 
     startGame() {
@@ -54,11 +57,17 @@ export class Game {
         this.#createUnits();
         this.#googleJumpIntervalId = setInterval(() => {
             this.#moveGoogleToRandomPosition();
-        }, this.#settings.jumpGoogleInterval)
+        }, this.#settings.jumpGoogleInterval);
     }
 
     stop() {
-        clearInterval(this.#googleJumpIntervalId)
+        clearInterval(this.#googleJumpIntervalId);
+    }
+
+    finishGame() {
+        clearInterval(this.#googleJumpIntervalId);
+        this.#google.position = new Position(0, 0);
+        this.#status = GameStatus.finished;
     }
 
     setSettings(settings = {}) {
@@ -66,83 +75,143 @@ export class Game {
     }
 
     movePlayer1Right() {
-
+        this.#movePlayer(this.#player1, this.#player2, { x: 1 });
     }
+
     movePlayer1Left() {
-
+        this.#movePlayer(this.#player1, this.#player2, { x: -1 });
     }
+
     movePlayer1Up() {
-
+        this.#movePlayer(this.#player1, this.#player2, { y: -1 });
     }
+
     movePlayer1Down() {
-
+        this.#movePlayer(this.#player1, this.#player2, { y: 1 });
     }
-
 
     movePlayer2Right() {
-
+        this.#movePlayer(this.#player2, this.#player1, { x: 1 });
     }
+
     movePlayer2Left() {
-
+        this.#movePlayer(this.#player2, this.#player1, { x: -1 });
     }
+
     movePlayer2Up() {
-
+        this.#movePlayer(this.#player2, this.#player1, { y: -1 });
     }
+
     movePlayer2Down() {
-
+        this.#movePlayer(this.#player2, this.#player1, { y: 1 });
     }
 
-    #getRandomPosition(exceptionPosition = []) {
+    #getRandomPosition(exceptionPositions = []) {
         let x;
         let y;
 
         do {
             x = RandomNumber.getRandomNumber(this.#settings.gridSize.columns);
             y = RandomNumber.getRandomNumber(this.#settings.gridSize.rows);
-        } while (exceptionPosition.some(el => el.x === x && el.y === y))
+        } while (exceptionPositions.some((el) => el.x === x && el.y === y));
 
-        return new Position(x, y)
+        return new Position(x, y);
     }
 
     #moveGoogleToRandomPosition() {
-        const exceptionPosition = [this.#player1.position, this.#player2.position];
+        const exceptionPositions = [this.#player1.position, this.#player2.position];
         if (this.#google) {
-            exceptionPosition.push(this.#google.position)
+            exceptionPositions.push(this.#google.position);
         }
-        this.#google = new Google(this.#getRandomPosition(exceptionPosition))
+        this.#google = new Google(this.#getRandomPosition(exceptionPositions));
     }
 
     #createUnits() {
         this.#player1 = new Player(this.#getRandomPosition(), 1);
         this.#player2 = new Player(this.#getRandomPosition([this.#player1.position]), 2);
-        this.#moveGoogleToRandomPosition()
+        this.#moveGoogleToRandomPosition();
     }
 
+    #checkIsPlayerOnBorder(player, moveInfo) {
+        const positionCopy = player.position.clone();
+
+        if (moveInfo.x) positionCopy.x += moveInfo.x;
+        if (moveInfo.y) positionCopy.y += moveInfo.y;
+
+        // return positionCopy.x < 1
+        //     || positionCopy.y < 1
+        //     || positionCopy.x > this.#settings.gridSize.columns
+        //     || positionCopy.y > this.#settings.gridSize.rows;
+
+        if (positionCopy.x < 1 || positionCopy.x > this.#settings.gridSize.columns) return true;
+        if (positionCopy.y < 1 || positionCopy.y > this.#settings.gridSize.rows) return true;
+
+        return false;
+    }
+
+    #checkDidPlayersOverlap(currentPlayer, otherPlayer, moveInfo) {
+        const positionCopy = currentPlayer.position.clone();
+
+        if (moveInfo.x) positionCopy.x += moveInfo.x;
+        if (moveInfo.y) positionCopy.y += moveInfo.y;
+
+        return positionCopy.equal(otherPlayer.position);
+    }
+
+    #checkPlayerDidCatchGoogle(player) {
+        return player.position.equal(this.#google.position);
+    }
+
+    #updateScore(player) {
+        this.#score[player.id].points++;
+    }
+
+    #movePlayer(player, otherPlayer, moveInfo) {
+        const isOnBorder = this.#checkIsPlayerOnBorder(player, moveInfo);
+        const isOnDifferentPlayer = this.#checkDidPlayersOverlap(player, otherPlayer, moveInfo);
+
+        if (isOnBorder || isOnDifferentPlayer) return;
+
+        const { x, y } = player.position;
+
+        if (moveInfo.x) {
+            player.position = new Position(x + moveInfo.x, y);
+        }
+
+        if (moveInfo.y) {
+            player.position = new Position(x, y + moveInfo.y);
+        }
+
+        const isOnGoogle = this.#checkPlayerDidCatchGoogle(player);
+
+        if (isOnGoogle) {
+            this.#updateScore(player);
+            if (this.#score[player.id].points === this.#settings.pointsToWin) {
+                this.finishGame();
+                return;
+            }
+            this.#moveGoogleToRandomPosition();
+        }
+    }
 
 }
-
 
 export class Unit {
     constructor(position) {
         this.position = position;
     }
 }
+
 export class Player extends Unit {
     constructor(position, id) {
-        super(position)
+        super(position);
         this.id = id;
     }
 }
 
 export class Google extends Unit {
     constructor(position) {
-        super(position)
-    }
-}
-
-export class RandomNumber {
-    static getRandomNumber(max) {
-        return Math.floor(Math.random() * max + 1);
+        super(position);
     }
 }
 
@@ -153,7 +222,7 @@ export class Position {
     }
 
     clone() {
-        return new Position(this.x, this.y)
+        return new Position(this.x, this.y);
     }
 
     equal(position) {
@@ -162,3 +231,8 @@ export class Position {
     }
 }
 
+export class RandomNumber {
+    static getRandomNumber(max) {
+        return Math.floor(Math.random() * max + 1);
+    }
+}
