@@ -1,6 +1,7 @@
-import { GameStatus } from "./constants";
+import { GameStatus } from "./constants.js";
+import { EventEmitter } from "./observer/eventEmitter.js";
 
-export class Game {
+export class Game extends EventEmitter {
     #settings = {
         gridSize: {
             rows: 2,
@@ -50,6 +51,7 @@ export class Game {
     }
 
     constructor() {
+        super();
     }
 
     startGame() {
@@ -124,6 +126,7 @@ export class Game {
             exceptionPositions.push(this.#google.position);
         }
         this.#google = new Google(this.#getRandomPosition(exceptionPositions));
+        this.emit('positions-updated', {})
     }
 
     #createUnits() {

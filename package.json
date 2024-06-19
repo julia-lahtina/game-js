@@ -2,7 +2,7 @@
   "name": "game-native-js",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "front.js",
   "scripts": {
     "test": "jest",
     "test-watch": "jest --watchAll"
