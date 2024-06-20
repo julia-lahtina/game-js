@@ -3,14 +3,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=	, initial-scale=1.0">
     <title>Game</title>
     <style>
         body {
             padding: 90px;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-content: center;
+            flex-direction: column;
+        }
+
+        table {
+            width: fit-content;
         }
 
         td {
@@ -23,14 +27,26 @@
             width: 50px;
             height: 50px;
         }
+
+        .score {
+            font-weight: 500;
+            font-size: 18px;
+            margin: 0 auto;
+        }
     </style>
 </head>
 
 <body>
 
+    <div>
+        <div class="score" id="score"></div>
+        <!--    <button>Start Game</button>-->
+    </div>
+
     <table id="table-grid"></table>
 
     <script src="front.js" type="module"></script>
+
 </body>
 
 </html>

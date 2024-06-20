@@ -1,19 +1,20 @@
 export class EventEmitter {
-    #subscribers = {}
+    #events = {
+        // 'start-game': [
+        //     ()=>{}, ()=>{}
+        // ]
+    };
 
-    subscribe(eventName, callback) {
-        if (!this.#subscribers[eventName]) {
-            this.#subscribers[eventName] = []
+    on(eventName, callback) {
+        if (!this.#events[eventName]) {
+            this.#events[eventName] = [];
         }
-        this.#subscribers[eventName].push(callback);
+        this.#events[eventName].push(callback);
     }
 
     emit(eventName, data) {
-        this.#subscribers[eventName]?.forEach(callback => {
-            callback(data);
-        });
+        this.#events[eventName]?.forEach((callback) => callback(data));
     }
 
-    unsubscribe() { };
-
+    unsubscribe() { }
 }

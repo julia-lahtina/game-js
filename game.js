@@ -1,13 +1,12 @@
 import { GameStatus } from "./constants.js";
-import { EventEmitter } from "./observer/eventEmitter.js";
 
-export class Game extends EventEmitter {
+export class Game {
     #settings = {
         gridSize: {
-            rows: 2,
-            columns: 2,
+            rows: 5,
+            columns: 5,
         },
-        jumpGoogleInterval: 100,
+        jumpGoogleInterval: 3000,
         maxPointsToWin: 10
     };
 
@@ -25,6 +24,8 @@ export class Game extends EventEmitter {
         1: { points: 0 },
         2: { points: 0 },
     };
+
+    #eventEmitter;
 
     get settings() {
         return this.#settings;
@@ -50,8 +51,12 @@ export class Game extends EventEmitter {
         return this.#score;
     }
 
-    constructor() {
-        super();
+    get eventEmitter() {
+        return this.#eventEmitter;
+    }
+
+    constructor(eventEmitter) {
+        this.#eventEmitter = eventEmitter;
     }
 
     startGame() {
@@ -78,34 +83,42 @@ export class Game extends EventEmitter {
 
     movePlayer1Right() {
         this.#movePlayer(this.#player1, this.#player2, { x: 1 });
+        this.eventEmitter.emit('positions-updated', {})
     }
 
     movePlayer1Left() {
         this.#movePlayer(this.#player1, this.#player2, { x: -1 });
+        this.eventEmitter.emit('positions-updated', {})
     }
 
     movePlayer1Up() {
         this.#movePlayer(this.#player1, this.#player2, { y: -1 });
+        this.eventEmitter.emit('positions-updated', {})
     }
 
     movePlayer1Down() {
         this.#movePlayer(this.#player1, this.#player2, { y: 1 });
+        this.eventEmitter.emit('positions-updated', {})
     }
 
     movePlayer2Right() {
         this.#movePlayer(this.#player2, this.#player1, { x: 1 });
+        this.eventEmitter.emit('positions-updated', {})
     }
 
     movePlayer2Left() {
         this.#movePlayer(this.#player2, this.#player1, { x: -1 });
+        this.eventEmitter.emit('positions-updated', {})
     }
 
     movePlayer2Up() {
         this.#movePlayer(this.#player2, this.#player1, { y: -1 });
+        this.eventEmitter.emit('positions-updated', {})
     }
 
     movePlayer2Down() {
         this.#movePlayer(this.#player2, this.#player1, { y: 1 });
+        this.eventEmitter.emit('positions-updated', {})
     }
 
     #getRandomPosition(exceptionPositions = []) {
@@ -126,7 +139,8 @@ export class Game extends EventEmitter {
             exceptionPositions.push(this.#google.position);
         }
         this.#google = new Google(this.#getRandomPosition(exceptionPositions));
-        this.emit('positions-updated', {})
+
+        this.eventEmitter.emit('positions-updated', {})
     }
 
     #createUnits() {
@@ -175,14 +189,12 @@ export class Game extends EventEmitter {
 
         if (isOnBorder || isOnDifferentPlayer) return;
 
-        const { x, y } = player.position;
-
         if (moveInfo.x) {
-            player.position = new Position(x + moveInfo.x, y);
+            player.position.x += moveInfo.x;
         }
 
         if (moveInfo.y) {
-            player.position = new Position(x, y + moveInfo.y);
+            player.position.y += moveInfo.y;
         }
 
         const isOnGoogle = this.#checkPlayerDidCatchGoogle(player);
