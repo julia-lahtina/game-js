@@ -1,5 +1,5 @@
-import { Game } from './game.js';
-import { EventEmitter } from "./observer/eventEmitter.js";
+import { Game } from '../domain/game.js';
+import { EventEmitter } from "../utils/observer/eventEmitter.js";
 import { View } from "./view.js";
 
 const eventEmitter = new EventEmitter();
